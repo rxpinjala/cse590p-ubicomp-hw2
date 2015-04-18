@@ -12,8 +12,9 @@ public class DataStore {
     private int _first;
     private int _next;
 
-    private static final long INTERVAL = 5000; // 5 seconds, in milliseconds
+    private static final long INTERVAL = 10000; // 10 seconds, in milliseconds
     private static final int FFT_SIZE = 1024;
+    private static final int SECONDS_PER_MINUTE = 60;
 
     // we want to store about 10 seconds of data, but the sampling rate is
     // variable and device-dependent, so let's just allocate way more space than we need
@@ -26,15 +27,23 @@ public class DataStore {
         _next = 0;
     }
 
-    private int size() {
+    public int size() {
         return _next - _first;
     }
 
-    private float data(int i) {
+    public long timeSpan() {
+        long firstTs = _timestamps[_first];
+        long lastTs = _timestamps[_next - 1];
+        long elapsed = lastTs - firstTs;
+
+        return elapsed;
+    }
+
+    public float data(int i) {
         return _data[_first + i];
     }
 
-    private long timestamp(int i) {
+    public long timestamp(int i) {
         return _timestamps[_first + i];
     }
 
@@ -76,22 +85,47 @@ public class DataStore {
         if (size() == 0)
             return 0.0f; // no data
 
-        long firstTs = _timestamps[_first];
-        long lastTs = _timestamps[_next - 1];
-        long elapsed = lastTs - firstTs;
+        long elapsed = timeSpan();
 
         // (number of samples - 1) / elapsed time
-        return (float)(size() - 1) / elapsed;
+        return 1000.0f * (size() - 1) / elapsed;
+    }
+
+    public boolean canComputeHeartRate() {
+        return timeSpan() > 5000;
     }
 
     public double computeHeartRate() {
-        FFT fft = new FFT(FFT_SIZE, computeSampleRate());
-        float[] data = new float[size()];
-        for (int i = 0; i < data.length; i++)
+        float sampleRate = computeSampleRate();
+        FFT fft = new FFT(FFT_SIZE, sampleRate);
+        float[] data = new float[FFT_SIZE];
+        for (int i = 0; i < size(); i++)
             data[i] = _data[_first + i];
+        for (int i = size(); i < data.length; i++)
+            data[i] = 0.0f;
 
         fft.forward(data);
 
-        return 0.0; // TODO
+        float[] real = fft.getRealPart();
+        float[] imag = fft.getImaginaryPart();
+
+        float[] mag = new float[FFT_SIZE];
+        for (int i = 0; i < FFT_SIZE; i++) {
+            mag[i] = (float)Math.sqrt((real[i] * real[i]) + (imag[i] * imag[i]));
+        }
+
+        // find the max component
+        float max_value = 0.0f;
+        int max_index = 0;
+        int iMin = fft.freqToIndex(50.0f / SECONDS_PER_MINUTE);
+        int iMax = fft.freqToIndex(250.0f / SECONDS_PER_MINUTE);
+        for (int i = iMin; i <= iMax; i++) {
+            if (mag[i] > max_value) {
+                max_value = mag[i];
+                max_index = i;
+            }
+        }
+
+        return fft.indexToFreq(max_index) * SECONDS_PER_MINUTE;
     }
 }

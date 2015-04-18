@@ -18,6 +18,9 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
         }
     }
 
+    private DataStore _data;
+    private ColorDisplay _display;
+
     private CameraBridgeViewBase _openCvCameraView;
     private TextView _heartRateView;
     private TextView _dbgText1;
@@ -29,6 +32,8 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        _data = new DataStore();
+
         _openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.HelloOpenCvView);
         _openCvCameraView.setCvCameraViewListener(this);
         _openCvCameraView.enableView();
@@ -38,6 +43,9 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
         _dbgText1 = (TextView)findViewById(R.id.dbgText1);
         _dbgText2 = (TextView)findViewById(R.id.dbgText2);
         _dbgText3 = (TextView)findViewById(R.id.dbgText3);
+
+        SurfaceView view = (SurfaceView)findViewById(R.id.surfaceView);
+        _display = new ColorDisplay(_data, view);
     }
 
     @Override
@@ -59,11 +67,6 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
         super.onDestroy();
         if (_openCvCameraView != null)
             _openCvCameraView.disableView();
-
-        _heartRateView = null;
-        _dbgText1 = null;
-        _dbgText2 = null;
-        _dbgText3 = null;
     }
 
     @Override
@@ -91,9 +94,31 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
         Mat rgba = frame.rgba();
+
         Scalar components = Core.mean(rgba);
-        double red = components.val[0];
-        return frame.rgba();
+        final double red = components.val[0];
+        final double green = components.val[1];
+        final double blue = components.val[2];
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                double dataPoint = red * 3 / (red + green + blue);
+
+                _data.addDataPoint((float)dataPoint, System.currentTimeMillis());
+                if (_data.canComputeHeartRate()) {
+                    double heartRate = _data.computeHeartRate();
+                    _heartRateView.setText(String.format("%.1f", heartRate));
+                }
+
+                _display.update();
+
+                _dbgText1.setText("Red: " + red);
+                _dbgText2.setText("Green: " + green);
+                _dbgText3.setText("Blue: " + blue);
+            }
+        });
+
+        return rgba;
     }
 
     @Override
