@@ -4,6 +4,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
+import android.widget.TextView;
 
 import org.opencv.core.*;
 import org.opencv.android.*;
@@ -18,6 +19,10 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
     }
 
     private CameraBridgeViewBase _openCvCameraView;
+    private TextView _heartRateView;
+    private TextView _dbgText1;
+    private TextView _dbgText2;
+    private TextView _dbgText3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +32,12 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
         _openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.HelloOpenCvView);
         _openCvCameraView.setCvCameraViewListener(this);
         _openCvCameraView.enableView();
+
+        _heartRateView = (TextView)findViewById(R.id.heartRate);
+
+        _dbgText1 = (TextView)findViewById(R.id.dbgText1);
+        _dbgText2 = (TextView)findViewById(R.id.dbgText2);
+        _dbgText3 = (TextView)findViewById(R.id.dbgText3);
     }
 
     @Override
@@ -43,10 +54,16 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
             _openCvCameraView.disableView();
     }
 
+    @Override
     public void onDestroy() {
         super.onDestroy();
         if (_openCvCameraView != null)
             _openCvCameraView.disableView();
+
+        _heartRateView = null;
+        _dbgText1 = null;
+        _dbgText2 = null;
+        _dbgText3 = null;
     }
 
     @Override
