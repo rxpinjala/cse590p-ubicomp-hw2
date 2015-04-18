@@ -12,13 +12,15 @@ public class DataStore {
     private int _first;
     private int _next;
 
-    private static final long INTERVAL = 10000; // 10 seconds, in milliseconds
-    private static final int FFT_SIZE = 1024;
+    // cache this for display
+    private float[] _lastFftResult;
+
+    public static final int FFT_SIZE = 256;
     private static final int SECONDS_PER_MINUTE = 60;
 
-    // we want to store about 10 seconds of data, but the sampling rate is
-    // variable and device-dependent, so let's just allocate way more space than we need
-    private static final int DATA_STORE_SIZE = 4096;
+    // allocate way more space than we need so that we can use a sliding window into the
+    // buffers, and avoid reallocating them too often
+    private static final int DATA_STORE_SIZE = 1024;
 
     public DataStore() {
         _data = new float[DATA_STORE_SIZE];
@@ -47,6 +49,10 @@ public class DataStore {
         return _timestamps[_first + i];
     }
 
+    public float[] lastFftResult() {
+        return _lastFftResult;
+    }
+
     public void addDataPoint(float f, long ts) {
         _data[_next] = f;
         _timestamps[_next] = ts;
@@ -59,14 +65,15 @@ public class DataStore {
         long currentTime = System.currentTimeMillis();
 
         // shift _first past any stale data
-        while (_timestamps[_first] < (currentTime - INTERVAL)) {
+        while (size() > FFT_SIZE) {
             _first++;
         }
 
         // shift data down to 0 if we're at the end
         if (_next == _data.length) {
             if (_first == 0) {
-                // more data than we can handle! we could do some kind of neat dynamic buffer size, but for homework let's just bail out now
+                // more data than we can handle! we could do some kind of neat dynamic buffer size,
+                // but for homework let's just bail out now
                 throw new Error("data buffers too small");
             }
 
@@ -91,18 +98,17 @@ public class DataStore {
         return 1000.0f * (size() - 1) / elapsed;
     }
 
+    // Do we have enough data to start calculating FFTs?
     public boolean canComputeHeartRate() {
-        return timeSpan() > 5000;
+        return size() == FFT_SIZE;
     }
 
     public double computeHeartRate() {
         float sampleRate = computeSampleRate();
         FFT fft = new FFT(FFT_SIZE, sampleRate);
         float[] data = new float[FFT_SIZE];
-        for (int i = 0; i < size(); i++)
+        for (int i = 0; i < FFT_SIZE; i++)
             data[i] = _data[_first + i];
-        for (int i = size(); i < data.length; i++)
-            data[i] = 0.0f;
 
         fft.forward(data);
 
@@ -114,10 +120,13 @@ public class DataStore {
             mag[i] = (float)Math.sqrt((real[i] * real[i]) + (imag[i] * imag[i]));
         }
 
+        // stash this for display
+        _lastFftResult = mag;
+
         // find the max component
         float max_value = 0.0f;
         int max_index = 0;
-        int iMin = fft.freqToIndex(50.0f / SECONDS_PER_MINUTE);
+        int iMin = fft.freqToIndex(30.0f / SECONDS_PER_MINUTE);
         int iMax = fft.freqToIndex(250.0f / SECONDS_PER_MINUTE);
         for (int i = iMin; i <= iMax; i++) {
             if (mag[i] > max_value) {
