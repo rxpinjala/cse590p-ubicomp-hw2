@@ -25,15 +25,14 @@
         android:layout_marginTop="20dp" />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:text="00"
         android:id="@+id/textView"
         android:textSize="80dp"
-        android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/HelloOpenCvView"
         android:layout_toEndOf="@+id/HelloOpenCvView"
-        android:layout_marginTop="46dp"
-        android:layout_marginLeft="40dp" />
+        android:layout_above="@+id/surfaceView"
+        android:gravity="center_vertical|center_horizontal" />
 
 </RelativeLayout>

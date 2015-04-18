@@ -9,43 +9,24 @@ import org.opencv.core.*;
 import org.opencv.android.*;
 
 public class MainActivity extends ActionBarActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
-    private String TAG = "HW2";
+    private static final String TAG = "HW2";
 
     static {
         if (!OpenCVLoader.initDebug()) {
-            Log.e("HW2", "Failed to init opencv");
+            Log.e(TAG, "Failed to init opencv");
         }
     }
 
-    private CameraBridgeViewBase mOpenCvCameraView;
-
-    /*
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
-    */
+    private CameraBridgeViewBase _openCvCameraView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.HelloOpenCvView);
-        mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.enableView();
+        _openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.HelloOpenCvView);
+        _openCvCameraView.setCvCameraViewListener(this);
+        _openCvCameraView.enableView();
     }
 
     @Override
@@ -58,14 +39,14 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
     public void onPause()
     {
         super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
+        if (_openCvCameraView != null)
+            _openCvCameraView.disableView();
     }
 
     public void onDestroy() {
         super.onDestroy();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
+        if (_openCvCameraView != null)
+            _openCvCameraView.disableView();
     }
 
     @Override
