@@ -1,6 +1,5 @@
 package edu.uw.rpinjala.homework2;
 
-import java.util.ArrayList;
 import com.badlogic.gdx.audio.analysis.FFT;
 
 public class DataStore {
@@ -12,7 +11,7 @@ public class DataStore {
     private int _first;
     private int _next;
 
-    // cache this for display
+    // cached result, used for display
     private float[] _lastFftResult;
 
     public static final int FFT_SIZE = 128;
@@ -88,6 +87,7 @@ public class DataStore {
         }
     }
 
+    // Estimates the sample rate of the data based on the elapsed time and number of samples
     private float computeSampleRate() {
         if (size() == 0)
             return 0.0f; // no data
@@ -126,8 +126,8 @@ public class DataStore {
         // find the max component
         float max_value = 0.0f;
         int max_index = 0;
-        int iMin = fft.freqToIndex(30.0f / SECONDS_PER_MINUTE);
-        int iMax = fft.freqToIndex(200.0f / SECONDS_PER_MINUTE);
+        int iMin = fft.freqToIndex(30.0f / SECONDS_PER_MINUTE); // index closest to 30 bpm
+        int iMax = fft.freqToIndex(200.0f / SECONDS_PER_MINUTE); // index closest to 200 bpm
         for (int i = iMin; i <= iMax; i++) {
             if (mag[i] > max_value) {
                 max_value = mag[i];
