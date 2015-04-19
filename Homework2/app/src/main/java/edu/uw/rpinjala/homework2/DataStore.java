@@ -15,7 +15,7 @@ public class DataStore {
     // cache this for display
     private float[] _lastFftResult;
 
-    public static final int FFT_SIZE = 256;
+    public static final int FFT_SIZE = 128;
     private static final int SECONDS_PER_MINUTE = 60;
 
     // allocate way more space than we need so that we can use a sliding window into the
@@ -127,7 +127,7 @@ public class DataStore {
         float max_value = 0.0f;
         int max_index = 0;
         int iMin = fft.freqToIndex(30.0f / SECONDS_PER_MINUTE);
-        int iMax = fft.freqToIndex(250.0f / SECONDS_PER_MINUTE);
+        int iMax = fft.freqToIndex(200.0f / SECONDS_PER_MINUTE);
         for (int i = iMin; i <= iMax; i++) {
             if (mag[i] > max_value) {
                 max_value = mag[i];

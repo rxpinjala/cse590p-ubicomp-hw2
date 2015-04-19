@@ -129,10 +129,10 @@ public class MainActivity extends ActionBarActivity implements CameraBridgeViewB
                 _lastUpdate = currentTime;
                 if (_data.canComputeHeartRate()) {
                     double heartRate = _data.computeHeartRate();
-                    _heartRateView.setText(String.format("%.1f", heartRate));
+                    _heartRateView.setText(String.format("%d", Math.round(heartRate)));
                 } else {
                     double percentage = 100.0 * _data.size() / _data.FFT_SIZE;
-                    _heartRateView.setText(String.format("%d%%", (int)percentage));
+                    _heartRateView.setText(String.format("%d%%", Math.round(percentage)));
                 }
 
             }
